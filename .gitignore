@@ -1,3 +1,7 @@
 data/
 .idea/
+<<<<<<< HEAD
 .DS_Store
+=======
+.DS_Store
+>>>>>>> 7d6564a (Fix conflict)
