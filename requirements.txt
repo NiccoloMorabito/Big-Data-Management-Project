@@ -2,3 +2,6 @@ urljoin
 beautifulsoup4
 patool
 dbfread
+requests
+lxml
+rarfile
