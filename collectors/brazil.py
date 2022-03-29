@@ -1,15 +1,16 @@
-from operator import contains
 from bs4 import BeautifulSoup
 import requests
 from os import makedirs
-from os.path import abspath, dirname, join
+from os.path import dirname, join
+from json_utils import load_seen_files, save_seen_files
 
 import urllib3
 urllib3.disable_warnings()
 
-BRAZIL_FOLDER = join(dirname(abspath(__file__)), "data/brazil")
+BRAZIL_FOLDER = "../data/brazil"
 BRAZIL_URL = "https://www.gov.br/produtividade-e-comercio-exterior/pt-br/assuntos/comercio-exterior/estatisticas/base-de-dados-bruta"
 COMMON_PART_IN_LINK = "https://balanca.economia.gov.br/balanca/bd/"
+BRAZIL_SEENFILES_PATH = "brazil.json"
 
 def get_all_links_in(url):
     req = requests.get(url).text
@@ -20,19 +21,23 @@ def get_all_links_in(url):
 if __name__ == '__main__':
     #TODO run this every x days
 
-    #TODO check what data is already downloaded not to download it again
+    seen_files = load_seen_files(BRAZIL_SEENFILES_PATH)
+
     for link in get_all_links_in(BRAZIL_URL):
         current_link = link.get("href")
         if current_link and (current_link.endswith('.csv') or current_link.endswith('.xlsx')):
-            print(current_link)
-            print(f"\t{current_link.replace(COMMON_PART_IN_LINK, '')}")
+            dataset_name = current_link.replace(COMMON_PART_IN_LINK, '')
+            if dataset_name in seen_files:
+                continue
 
-            url_content = requests.get(current_link, verify=False).content
-
-            filepath = join(BRAZIL_FOLDER, current_link.replace(COMMON_PART_IN_LINK, '') )
-
+            filepath = join(BRAZIL_FOLDER, dataset_name)
             makedirs(dirname(filepath), exist_ok=True)
-
+            url_content = requests.get(current_link, verify=False).content
             with open(filepath, 'wb') as csv_file:
                 csv_file.write(url_content)
+
+            print(f"{current_link}\t({dataset_name})")
             
+            seen_files.append(dataset_name)
+
+    save_seen_files(BRAZIL_SEENFILES_PATH, seen_files)

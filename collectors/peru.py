@@ -2,18 +2,8 @@ import json
 import os.path
 import re
 from typing import List
-
+from json_utils import load_seen_files, save_seen_files
 import requests
-
-
-def load_seen_files() -> List[str]:
-    with open('./collectors/peru.json', 'r+', encoding='utf8') as file:
-        return json.load(file)
-
-
-def save_seen_files(files: List[str]):
-    with open('./collectors/peru.json', 'w+', encoding='utf8') as file:
-        json.dump(files, file)
 
 
 def download_file(full_link: str, destination: str):
@@ -29,9 +19,10 @@ def main():
     url = 'http://www.aduanet.gob.pe/aduanas/informae/presentacion_bases_web.htm'
     base_url = 'http://www.aduanet.gob.pe'
     base_downloads_folder = './data/peru/'
+    base_seenfiles_json = './collectors/peru.json'
     html = requests.get(url).text
     links = re.findall(r'href="(.+?)"', html)
-    seen_files = load_seen_files()
+    seen_files = load_seen_files(base_seenfiles_json)
     for link in links:
         filename = os.path.basename(link)
         if not filename.endswith('.zip'):
@@ -45,7 +36,7 @@ def main():
         full_link = f'{base_url}{link}'.replace('\\', '/')
         download_file(full_link, f'{base_downloads_folder}{filename}')
 
-    save_seen_files(seen_files)
+    save_seen_files(base_seenfiles_json, seen_files)
 
 
 if __name__ == '__main__':
