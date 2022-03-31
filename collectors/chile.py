@@ -82,10 +82,10 @@ if __name__ == '__main__':
                     file.write(file_content)
                 
                 seen_files.append(dataset_name)
-        break
 
     save_seen_files(CHILE_SEENFILES_PATH, seen_files)
     
+    #TODO move into loader
     # extract RAR files
     print("\n\nExtracting...")
     for file in os.listdir(CHILE_FOLDER):
