@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "73af365832cb918e6cd9fa0ec4b5e6d68c6e431a7b725711565456d32965883c"
+            "sha256": "ed518a6da27acb6c0a5e8260bf14e2b86800e8893acfeda20fca75affc5324d2"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -47,6 +47,13 @@
             "index": "pypi",
             "version": "==2.0.7"
         },
+        "happybase": {
+            "hashes": [
+                "sha256:850b4ee651128588a57e1e152dd1252e5ec39776a5d3d14ee892b8bac0fa9e1a"
+            ],
+            "index": "pypi",
+            "version": "==1.2.0"
+        },
         "idna": {
             "hashes": [
                 "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff",
@@ -63,6 +70,13 @@
             "index": "pypi",
             "version": "==1.12"
         },
+        "ply": {
+            "hashes": [
+                "sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3",
+                "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce"
+            ],
+            "version": "==3.11"
+        },
         "requests": {
             "hashes": [
                 "sha256:68d7c56fd5a8999887728ef304a6d12edc7be74f1cfa47714fc8b414525c9a61",
@@ -71,6 +85,14 @@
             "index": "pypi",
             "version": "==2.27.1"
         },
+        "six": {
+            "hashes": [
+                "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
+                "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"
+            ],
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "version": "==1.16.0"
+        },
         "soupsieve": {
             "hashes": [
                 "sha256:1a3cca2617c6b38c0343ed661b1fa5de5637f257d4fe22bd9f1338010a1efefb",
@@ -78,6 +100,14 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==2.3.1"
+        },
+        "thriftpy2": {
+            "hashes": [
+                "sha256:1758ccaeb2a40d8779b50cdd3d7a3b43e8c5752f21ad0a54ded7c251d05219e8",
+                "sha256:b4aae6f6c1d8d12e63c45f68ec1a25267e7d3af1ced1e5a82cbabaaed4bcebc9"
+            ],
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "version": "==0.4.14"
         },
         "urljoin": {
             "hashes": [

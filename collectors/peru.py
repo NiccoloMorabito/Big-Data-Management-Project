@@ -1,9 +1,9 @@
-import json
 import os.path
 import re
-from typing import List
-from json_utils import load_seen_files, save_seen_files
+
 import requests
+
+from json_utils import load_seen_files, save_seen_files
 
 
 def download_file(full_link: str, destination: str):

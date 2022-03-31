@@ -10,6 +10,7 @@ patool = "*"
 requests = "*"
 urllib3 = "*"
 dbfread = "*"
+happybase = "*"
 
 [dev-packages]
 
