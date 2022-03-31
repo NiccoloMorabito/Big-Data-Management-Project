@@ -37,8 +37,7 @@ def extract_rars_in(folderpath):
     Extracts all rar files in the folder and deletes the rar files afterwards
     '''
     for file in os.listdir(folderpath):
-        #TODO check if this regex works
-        if re.match("\.part[0-9][2-9]\.rar", file):
+        if re.search(r"\.part[0-9][2-9]\.rar", file):
             continue
         if file.endswith(".rar"):
             filepath = os.path.join(folder, file)
@@ -83,6 +82,7 @@ if __name__ == '__main__':
                     file.write(file_content)
                 
                 seen_files.append(dataset_name)
+        break
 
     save_seen_files(CHILE_SEENFILES_PATH, seen_files)
     
