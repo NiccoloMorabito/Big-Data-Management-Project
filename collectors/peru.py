@@ -15,16 +15,19 @@ BASE_URL = 'http://www.aduanet.gob.pe'
 TEMP_FOLDER = 'temp/'
 PERU_SEENFILES_PATH = 'peru.json'
 
+
 def download_file(full_link, noext_filepath):
     print("downloading " + full_link)
     response = requests.get(full_link, verify=False)
     with open(noext_filepath + '.zip', 'wb') as file:
         file.write(response.content)
 
+
 def extract_zip(noext_filepath):
     zip_filepath = noext_filepath + '.zip'
     extract_archive(zip_filepath, outdir=TEMP_FOLDER, verbosity=-1)
     os.remove(zip_filepath)
+
 
 def convert_dbf_to_csv(noext_filepath):
     table = DBF(noext_filepath + '.DBF')
@@ -36,17 +39,20 @@ def convert_dbf_to_csv(noext_filepath):
             writer.writerow(list(record.values()))
     os.remove(noext_filepath + '.DBF')
 
+
 def upload_csv_to_hdfs(hdfs_client, noext_filepath):
     csv_filepath = noext_filepath + '.csv'
     hdfs_client.upload(os.path.join(PERU_HDFS_FOLDER, os.path.basename(csv_filepath)), csv_filepath)
     os.remove(noext_filepath + '.csv')
+
 
 def main():
     hdfs_client = InsecureClient('http://127.0.0.1:9870', user='bdm')
     seen_files = load_seen_files(PERU_SEENFILES_PATH)
     links = get_links_at(PERU_URL)
 
-    os.mkdir(TEMP_FOLDER)
+    if not os.path.exists(TEMP_FOLDER):
+        os.mkdir(TEMP_FOLDER)
     for link in links:
         link = link.replace('\\', '/')
         filename = os.path.basename(link)
