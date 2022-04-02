@@ -5,12 +5,12 @@ import os
 from rarfile import RarFile
 import re
 from hdfs import InsecureClient
-from json_utils import load_seen_files, save_seen_files
+from utils import load_seen_files, save_seen_files
 
 import urllib3
 urllib3.disable_warnings()
 
-CHILE_FOLDER = "../data/chile"
+CHILE_HDFS_FOLDER = "/data/chile"
 CHILE_URL = "https://datos.gob.cl/organization/servicio_nacional_de_aduanas?page={}"
 CHILE_SEENFILES_PATH = "chile.json"
 HEADER = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
@@ -57,7 +57,7 @@ def extract_rars_in(folderpath, hdfs_client):
     
     for file in os.listdir(folderpath):
         filepath = os.path.join(folderpath, file)
-        hdfspath = os.path.join("/data/chile", filepath)
+        hdfspath = os.path.join(CHILE_HDFS_FOLDER, filepath)
         hdfs_client.upload(hdfspath, filepath)
         os.remove(filepath)
     
@@ -88,14 +88,13 @@ if __name__ == '__main__':
             file_name = os.path.join(current_link.split("/")[-1], download_link.split("/")[-1])
             if file_name in seen_files:
                 continue
-
-            filepath = os.path.join(CHILE_FOLDER, file_name)
             print("\t" + file_name)
-            file_content = requests.get(download_link, verify=False, headers=HEADER).content
 
+            file_content = requests.get(download_link, verify=False, headers=HEADER).content
             if download_link.endswith('.xlsx'):
                 continue #TODO not downloading xlsx for the moment since they are related to metadata, etc.
                 file_content = file_content.decode('utf-8')
+                filepath = os.path.join(CHILE_FOLDER, file_name)
                 with hdfs_client.write(filepath, encoding='utf-8') as writer:
                     writer.write(url_content)
             elif download_link.endswith('.rar'):
