@@ -38,7 +38,7 @@ def convert_dbf_to_csv(noext_filepath):
 
 def upload_csv_to_hdfs(hdfs_client, noext_filepath):
     csv_filepath = noext_filepath + '.csv'
-    hdfs_client.upload(os.path.join(PERU_HDFS_FOLDER, csv_filepath), csv_filepath)
+    hdfs_client.upload(os.path.join(PERU_HDFS_FOLDER, os.path.basename(csv_filepath)), csv_filepath)
     os.remove(noext_filepath + '.csv')
 
 def main():
