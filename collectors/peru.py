@@ -1,42 +1,71 @@
+from distutils.command.upload import upload
+from lib2to3.pytree import convert
+import os
 import os.path
-import re
-
 import requests
+from patoolib import extract_archive
+from dbfread import DBF
+from hdfs import InsecureClient
+import csv
+from utils import load_seen_files, save_seen_files, get_links_at
 
-from json_utils import load_seen_files, save_seen_files
+PERU_HDFS_FOLDER = "/data/peru"
+PERU_URL = 'http://www.aduanet.gob.pe/aduanas/informae/presentacion_bases_web.htm'
+BASE_URL = 'http://www.aduanet.gob.pe'
+TEMP_FOLDER = 'temp/'
+PERU_SEENFILES_PATH = 'peru.json'
 
-
-def download_file(full_link: str, destination: str):
-    print('\tDownloading ...', end='')
+def download_file(full_link, noext_filepath):
+    print("downloading " + full_link)
     response = requests.get(full_link, verify=False)
-    print(' Saving ...', end='')
-    with open(destination, 'wb') as file:
+    with open(noext_filepath + '.zip', 'wb') as file:
         file.write(response.content)
-    print(' Saved')
 
+def extract_zip(noext_filepath):
+    zip_filepath = noext_filepath + '.zip'
+    extract_archive(zip_filepath, outdir=TEMP_FOLDER, verbosity=-1)
+    os.remove(zip_filepath)
+
+def convert_dbf_to_csv(noext_filepath):
+    table = DBF(noext_filepath + '.DBF')
+    csv_filepath = noext_filepath + '.csv'
+    with open(csv_filepath, 'w+', newline='') as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(table.field_names)
+        for record in table:
+            writer.writerow(list(record.values()))
+    os.remove(noext_filepath + '.DBF')
+
+def upload_csv_to_hdfs(hdfs_client, noext_filepath):
+    csv_filepath = noext_filepath + '.csv'
+    hdfs_client.upload(os.path.join(PERU_HDFS_FOLDER, csv_filepath), csv_filepath)
+    os.remove(noext_filepath + '.csv')
 
 def main():
-    url = 'http://www.aduanet.gob.pe/aduanas/informae/presentacion_bases_web.htm'
-    base_url = 'http://www.aduanet.gob.pe'
-    base_downloads_folder = './data/peru/'
-    base_seenfiles_json = './collectors/peru.json'
-    html = requests.get(url).text
-    links = re.findall(r'href="(.+?)"', html)
-    seen_files = load_seen_files(base_seenfiles_json)
+    hdfs_client = InsecureClient('http://127.0.0.1:9870', user='bdm')
+    seen_files = load_seen_files(PERU_SEENFILES_PATH)
+    links = get_links_at(PERU_URL)
+
+    os.mkdir(TEMP_FOLDER)
     for link in links:
+        link = link.replace('\\', '/')
         filename = os.path.basename(link)
+        if filename in seen_files:
+            continue
         if not filename.endswith('.zip'):
             continue
         if not filename.startswith('x'):
             continue
-        if filename in seen_files:
-            continue
         seen_files.append(filename)
-        print(f'New file found: {filename}')
-        full_link = f'{base_url}{link}'.replace('\\', '/')
-        download_file(full_link, f'{base_downloads_folder}{filename}')
 
-    save_seen_files(base_seenfiles_json, seen_files)
+        noext_filepath = f'{TEMP_FOLDER}{os.path.splitext(filename)[0]}'
+        download_file(f'{BASE_URL}{link}', noext_filepath)
+        extract_zip(noext_filepath)
+        convert_dbf_to_csv(noext_filepath)
+        upload_csv_to_hdfs(hdfs_client, noext_filepath)
+    os.rmdir(TEMP_FOLDER)
+
+    save_seen_files(PERU_SEENFILES_PATH, seen_files)
 
 
 if __name__ == '__main__':
