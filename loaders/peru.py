@@ -6,7 +6,7 @@ from tqdm import tqdm
 from happybase import Connection, Table
 from hdfs import Client, InsecureClient
 
-BASE_PATH = '/data/peru/temp'
+BASE_PATH = '/data/peru'
 
 
 def get_files_from_hdfs(hdfs_client: Client) -> List[str]:
