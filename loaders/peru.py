@@ -23,7 +23,9 @@ def load_file_to_hbase(file: str, hdfs_client: Client, hbase_client: Table, batc
         print(f'\tStart loading data to HBase (in batches of {batch_size} rows)')
         headers = next(reader)
         for i, row in tqdm(enumerate(reader, 1)):
-            batch.put(f'{filename}-{i}', {f'values:{key}': val for key, val in zip(headers, row)})
+            data = {f'values:{key}': val for key, val in zip(headers, row)}
+            data['values:filename'] = file
+            batch.put(f'{filename}-{i}', data)
             if i % batch_size == 0:
                 batch.send()
                 batch = hbase_client.batch()
