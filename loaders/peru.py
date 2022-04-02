@@ -13,7 +13,7 @@ def get_files_from_hdfs(hdfs_client: Client) -> List[str]:
     return hdfs_client.list(BASE_PATH)
 
 
-def load_file_to_hbase(file: str, hdfs_client: Client, hbase_client: Table, batch_size=5000):
+def load_file_to_hbase(file: str, hdfs_client: Client, hbase_client: Table, batch_size=1000):
     print(f'Loading {file}')
     filename = os.path.splitext(os.path.basename(file))
     batch = hbase_client.batch()
