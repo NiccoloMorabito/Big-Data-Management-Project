@@ -15,10 +15,7 @@ BRAZIL_URL = "https://www.gov.br/produtividade-e-comercio-exterior/pt-br/assunto
 COMMON_PART_IN_URL = "https://balanca.economia.gov.br/balanca/bd/"
 BRAZIL_SEENFILES_PATH = "brazil.json"
 
-
-if __name__ == '__main__':
-    #TODO run this every x days
-
+def main():
     hdfs_client = InsecureClient('http://127.0.0.1:9870', user='bdm')
     seen_files = load_seen_files(BRAZIL_SEENFILES_PATH)
     links = get_links_at(BRAZIL_URL)
@@ -39,3 +36,7 @@ if __name__ == '__main__':
             seen_files.append(dataset_name)
 
     save_seen_files(BRAZIL_SEENFILES_PATH, seen_files)
+
+
+if __name__ == '__main__':
+    main()

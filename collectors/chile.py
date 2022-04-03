@@ -1,4 +1,3 @@
-from json import load
 from bs4 import BeautifulSoup
 import requests
 import os
@@ -16,7 +15,9 @@ CHILE_SEENFILES_PATH = "chile.json"
 HEADER = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
 
 def get_datasets_from_all_pages():
-    # collect the different datasets from the main site by iterating on the different pages
+    '''
+    Collects the different datasets from the main site by iterating on the different pages
+    '''
     page=1
     datasets = set()
     newpage_datasets = get_datasets_in(page)
@@ -63,9 +64,7 @@ def extract_rars_in(folderpath, hdfs_client):
     
     os.rmdir(folderpath)
 
-if __name__ == '__main__':
-    #TODO run this every x days
-    
+def main():
     hdfs_client = InsecureClient('http://127.0.0.1:9870', user='bdm')
     new_datasets = get_datasets_from_all_pages()
     seen_files = load_seen_files(CHILE_SEENFILES_PATH)
@@ -77,35 +76,23 @@ if __name__ == '__main__':
 
         url_content = requests.get(current_link, verify=False, headers=HEADER).content
         subsoup = BeautifulSoup(url_content, features='lxml')
-        for sublink in subsoup.findAll("a"):
-            download_link = sublink.get("href")
-            if not download_link:
+        for sublink in subsoup.findAll('a'):
+            download_link = sublink.get('href')
+            if not download_link or not download_link.endswith('.rar'):
                 continue
-            if not download_link.endswith('.xlsx') and not download_link.endswith('.rar'):
-                continue
-
             # file_name is composed of the folder specifying import/export and year + file name
-            file_name = os.path.join(current_link.split("/")[-1], download_link.split("/")[-1])
+            file_name = os.path.join(current_link.split('/')[-1], download_link.split('/')[-1])
             if file_name in seen_files:
                 continue
             print("\t" + file_name)
 
-            file_content = requests.get(download_link, verify=False, headers=HEADER).content
-            if download_link.endswith('.xlsx'):
-                continue #TODO not downloading xlsx for the moment since they are related to metadata, etc.
-                file_content = file_content.decode('utf-8')
-                filepath = os.path.join(CHILE_FOLDER, file_name)
-                with hdfs_client.write(filepath, encoding='utf-8') as writer:
-                    writer.write(url_content)
-            elif download_link.endswith('.rar'):
-                #TODO clean variables and change variable names
-                #os.mkdir("temp")
-                rar_to_extract = True
-                os.makedirs(os.path.dirname(file_name), exist_ok=True)
-                with open(file_name, 'wb') as file:
-                    file.write(file_content)
-            
+            rar_to_extract = True
             seen_files.append(file_name)
+            os.makedirs(os.path.dirname(file_name), exist_ok=True)
+
+            file_content = requests.get(download_link, verify=False, headers=HEADER).content
+            with open(file_name, 'wb') as file:
+                file.write(file_content)
             
         # extract all rar files in temp
         if rar_to_extract:
@@ -114,4 +101,5 @@ if __name__ == '__main__':
         
         save_seen_files(CHILE_SEENFILES_PATH, seen_files)
 
-
+if __name__ == '__main__':
+    main()

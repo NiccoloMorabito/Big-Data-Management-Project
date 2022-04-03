@@ -1,5 +1,3 @@
-from distutils.command.upload import upload
-from lib2to3.pytree import convert
 import os
 import os.path
 import requests
@@ -60,7 +58,7 @@ def main():
             continue
         if not filename.endswith('.zip'):
             continue
-        if not filename.startswith('x'):
+        if not filename.startswith(('x', 'ma', 'mb')):
             continue
         seen_files.append(filename)
 
