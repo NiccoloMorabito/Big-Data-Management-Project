@@ -41,7 +41,7 @@ def get_datasets_in(page):
     return {link.get("href") for link in soup.findAll("a") if link.get("href").startswith("/dataset/")}
 
 
-def extract_rars_in(folderpath, hdfs_client):
+def extract_rars_in_hdfs(folderpath, hdfs_client):
     '''
     Extracts all rar files in the folder putting the content in HDFS and deletes the rar files afterwards
     '''
@@ -104,7 +104,7 @@ def main():
         # extract all rar files in temp
         if rar_to_extract:
             print(f"Extracting {os.path.dirname(file_name)}...")
-            extract_rars_in(os.path.dirname(file_name), hdfs_client)
+            extract_rars_in_hdfs(os.path.dirname(file_name), hdfs_client)
 
         save_seen_files(CHILE_SEENFILES_PATH, seen_files)
 
