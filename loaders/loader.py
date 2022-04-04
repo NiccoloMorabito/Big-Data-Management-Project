@@ -5,6 +5,8 @@ from happybase import Connection, Table
 from hdfs import Client, InsecureClient
 from tqdm import tqdm
 
+from settings.env import HDFS_SERVER, HBASE_SERVER
+
 
 class Country:
 
@@ -61,12 +63,12 @@ def brazil_key_gen(filename, row, row_number):
 
 
 def main():
-    hdfs_client = InsecureClient('http://tentacool.fib.upc.edu:9870', user='bdm')
-    hbase_client = Connection('victreebel.fib.upc.edu')
+    hdfs_client = InsecureClient(HDFS_SERVER, user='bdm')
+    hbase_client = Connection(HBASE_SERVER)
     countries = [
         Country('Peru', '/data/peru', 'peru', peru_key_gen),
-        Country('Chile', '/data/chile', 'chile', chile_key_gen),  # TODO Review hdfs data path
-        Country('Brazil', '/data/brazil', 'brazil', brazil_key_gen),  # TODO Review hdfs data path
+        # Country('Chile', '/data/chile', 'chile', chile_key_gen),  # TODO Review hdfs data path
+        # Country('Brazil', '/data/brazil', 'brazil', brazil_key_gen),  # TODO Review hdfs data path
     ]
     for country in countries:
         load_country(hdfs_client, hbase_client, country)
