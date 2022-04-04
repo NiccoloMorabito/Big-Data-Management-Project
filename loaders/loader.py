@@ -8,10 +8,11 @@ from tqdm import tqdm
 
 class Country:
 
-    def __init__(self, name, base_path, table_name) -> None:
+    def __init__(self, name, base_path, table_name, key_generator) -> None:
         self.name = name
         self.base_path = base_path
         self.table_name = table_name
+        self.key_generator = key_generator
 
 
 def load_file_to_hbase(file: str, hdfs_client: Client, hbase_client: Table, country: Country, batch_size=1000):
@@ -26,7 +27,8 @@ def load_file_to_hbase(file: str, hdfs_client: Client, hbase_client: Table, coun
         for i, row in tqdm(enumerate(reader, 1)):
             data = {f'values:{key}': val for key, val in zip(headers, row)}
             data['values:filename'] = file
-            batch.put(f'{filename}-{i}', data)
+            key = country.key_generator(filename, data, i)
+            batch.put(key, data)
             if i % batch_size == 0:
                 batch.send()
                 batch = hbase_client.batch()
@@ -45,13 +47,25 @@ def load_country(hdfs_client: Client, hbase_client: Connection, country: Country
         load_file_to_hbase(file, hdfs_client, hbase_client.table(country.table_name), country)
 
 
+def peru_key_gen(filename, row, row_number):
+    return f'{row[7]}-{row_number}'
+
+
+def chile_key_gen(filename, row, row_number):
+    return f'{filename}-{row_number}'
+
+
+def brazil_key_gen(filename, row, row_number):
+    return f'{filename}-{row_number}'
+
+
 def main():
     hdfs_client = InsecureClient('http://tentacool.fib.upc.edu:9870', user='bdm')
     hbase_client = Connection('victreebel.fib.upc.edu')
     countries = [
-        Country('Peru', '/data/peru', 'peru'),
-        Country('Chile', '/data/chile', 'chile'),  # TODO Review hdfs data path
-        Country('Brazil', '/data/brazil', 'brazil'),  # TODO Review hdfs data path
+        Country('Peru', '/data/peru', 'peru', peru_key_gen),
+        Country('Chile', '/data/chile', 'chile', chile_key_gen),  # TODO Review hdfs data path
+        Country('Brazil', '/data/brazil', 'brazil', brazil_key_gen),  # TODO Review hdfs data path
     ]
     for country in countries:
         load_country(hdfs_client, hbase_client, country)
