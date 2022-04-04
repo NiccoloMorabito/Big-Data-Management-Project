@@ -48,9 +48,10 @@ def load_country(hdfs_client: Client, hbase_client: Connection, country: Country
 
 
 def peru_key_gen(filename, row, row_number):
-    return f'{row[7]}-{row_number}'
+    return f'{filename[0]}-{row[7]}-{row_number}'
 
 
+# TODO: Fix chile and brazil key generation
 def chile_key_gen(filename, row, row_number):
     return f'{filename}-{row_number}'
 
