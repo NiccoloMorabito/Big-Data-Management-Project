@@ -4,35 +4,42 @@ import os
 from rarfile import RarFile
 import re
 from hdfs import InsecureClient
+
+from settings.env import HDFS_SERVER, HDFS_USERNAME
 from utils import load_seen_files, save_seen_files
 
 import urllib3
+
 urllib3.disable_warnings()
 
 CHILE_HDFS_FOLDER = "/data/chile"
 CHILE_URL = "https://datos.gob.cl/organization/servicio_nacional_de_aduanas?page={}"
 CHILE_SEENFILES_PATH = "chile.json"
-HEADER = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
+HEADER = {
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
+
 
 def get_datasets_from_all_pages():
     '''
     Collects the different datasets from the main site by iterating on the different pages
     '''
-    page=1
+    page = 1
     datasets = set()
     newpage_datasets = get_datasets_in(page)
     while newpage_datasets:
         datasets |= newpage_datasets
         page += 1
         newpage_datasets = get_datasets_in(page)
-    
+
     return datasets
+
 
 def get_datasets_in(page):
     url = CHILE_URL.format(page)
     req = requests.get(url, headers=HEADER).text
     soup = BeautifulSoup(req, features='lxml')
     return {link.get("href") for link in soup.findAll("a") if link.get("href").startswith("/dataset/")}
+
 
 def extract_rars_in(folderpath, hdfs_client):
     '''
@@ -47,25 +54,25 @@ def extract_rars_in(folderpath, hdfs_client):
                 rf = RarFile(filepath)
                 rf.extractall(folderpath)
             except:
-                print(f"Error extracting file: {filepath}") #TODO
+                print(f"Error extracting file: {filepath}")  # TODO
                 continue
-    
+
     for file in os.listdir(folderpath):
         if file.endswith(".rar"):
             filepath = os.path.join(folderpath, file)
             os.remove(filepath)
-    
-    
+
     for file in os.listdir(folderpath):
         filepath = os.path.join(folderpath, file)
         hdfspath = os.path.join(CHILE_HDFS_FOLDER, filepath)
         hdfs_client.upload(hdfspath, filepath)
         os.remove(filepath)
-    
+
     os.rmdir(folderpath)
 
+
 def main():
-    hdfs_client = InsecureClient('http://127.0.0.1:9870', user='bdm')
+    hdfs_client = InsecureClient(HDFS_SERVER, user=HDFS_USERNAME)
     new_datasets = get_datasets_from_all_pages()
     seen_files = load_seen_files(CHILE_SEENFILES_PATH)
 
@@ -93,13 +100,14 @@ def main():
             file_content = requests.get(download_link, verify=False, headers=HEADER).content
             with open(file_name, 'wb') as file:
                 file.write(file_content)
-            
+
         # extract all rar files in temp
         if rar_to_extract:
             print(f"Extracting {os.path.dirname(file_name)}...")
             extract_rars_in(os.path.dirname(file_name), hdfs_client)
-        
+
         save_seen_files(CHILE_SEENFILES_PATH, seen_files)
+
 
 if __name__ == '__main__':
     main()

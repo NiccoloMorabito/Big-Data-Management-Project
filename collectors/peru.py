@@ -5,6 +5,8 @@ from patoolib import extract_archive
 from dbfread import DBF
 from hdfs import InsecureClient
 import csv
+
+from settings.env import HDFS_SERVER, HDFS_USERNAME
 from utils import load_seen_files, save_seen_files, get_links_at
 
 PERU_HDFS_FOLDER = "/data/peru"
@@ -45,7 +47,7 @@ def upload_csv_to_hdfs(hdfs_client, noext_filepath):
 
 
 def main():
-    hdfs_client = InsecureClient('http://127.0.0.1:9870', user='bdm')
+    hdfs_client = InsecureClient(HDFS_SERVER, user=HDFS_USERNAME)
     seen_files = load_seen_files(PERU_SEENFILES_PATH)
     links = get_links_at(PERU_URL)
 
