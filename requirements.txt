@@ -5,3 +5,7 @@ dbfread
 requests
 lxml
 rarfile
+urllib3
+happybase
+hdfs
+tqdm
