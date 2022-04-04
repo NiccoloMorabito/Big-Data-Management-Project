@@ -60,7 +60,8 @@ def main():
             continue
         if not filename.endswith('.zip'):
             continue
-        if not filename.startswith(('x', 'ma', 'mb')):
+        # if not filename.startswith(('x', 'ma', 'mb')): TODO: Fix issue with imports files
+        if not filename.startswith('x'):
             continue
         seen_files.append(filename)
 
