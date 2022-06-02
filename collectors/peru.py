@@ -1,78 +1,41 @@
-import os
-import os.path
-import requests
-from patoolib import extract_archive
-from dbfread import DBF
-from hdfs import InsecureClient
 import csv
+import os.path
 
-from utils import load_seen_files, save_seen_files, get_links_at
-from env import HDFS_SERVER, HDFS_USERNAME
+from dbfread import DBF
 
-PERU_HDFS_FOLDER = "/data/peru"
-PERU_URL = 'http://www.aduanet.gob.pe/aduanas/informae/presentacion_bases_web.htm'
-BASE_URL = 'http://www.aduanet.gob.pe'
-TEMP_FOLDER = 'temp/'
-PERU_SEENFILES_PATH = 'peru.json'
+from collectors.scraper_collector import ScraperCollector
 
 
-def download_file(full_link, noext_filepath):
-    print("downloading " + full_link)
-    response = requests.get(full_link, verify=False)
-    with open(noext_filepath + '.zip', 'wb') as file:
-        file.write(response.content)
-
-
-def extract_zip(noext_filepath):
-    zip_filepath = noext_filepath + '.zip'
-    extract_archive(zip_filepath, outdir=TEMP_FOLDER, verbosity=-1)
-    os.remove(zip_filepath)
-
-
-def convert_dbf_to_csv(noext_filepath):
-    table = DBF(noext_filepath + '.DBF')
-    csv_filepath = noext_filepath + '.csv'
-    with open(csv_filepath, 'w+', newline='') as csv_file:
+def convert_dbf_to_csv(file: str) -> str:
+    print(f'Converting {file} to csv', end='')
+    table = DBF(file, encoding='latin-1')
+    file_name = os.path.splitext(file)[0]
+    csv_filepath = file_name + '.csv'
+    with open(csv_filepath, 'w+', newline='', encoding='utf8') as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow(table.field_names)
         for record in table:
-            writer.writerow(list(record.values()))
-    os.remove(noext_filepath + '.DBF')
-
-
-def upload_csv_to_hdfs(hdfs_client, noext_filepath):
-    csv_filepath = noext_filepath + '.csv'
-    hdfs_client.upload(os.path.join(PERU_HDFS_FOLDER, os.path.basename(csv_filepath)), csv_filepath)
-    os.remove(noext_filepath + '.csv')
+            writer.writerow([x.decode('latin-1').encode('utf8') if x is str else x for x in record.values()])
+    os.remove(file)
+    print(' => converted')
+    return csv_filepath
 
 
 def main():
-    hdfs_client = InsecureClient(HDFS_SERVER, user=HDFS_USERNAME)
-    seen_files = load_seen_files(PERU_SEENFILES_PATH)
-    links = get_links_at(PERU_URL)
+    collector = ScraperCollector('http://www.aduanet.gob.pe/aduanas/informae/presentacion_bases_web.htm',
+                                 'http://www.aduanet.gob.pe',
+                                 'peru')
 
-    if not os.path.exists(TEMP_FOLDER):
-        os.mkdir(TEMP_FOLDER)
+    links = collector.get_unseen_links(".zip")
     for link in links:
-        link = link.replace('\\', '/')
         filename = os.path.basename(link)
-        if filename in seen_files:
+        if not filename.startswith(('x', 'ma', 'mb')):
             continue
-        if not filename.endswith('.zip'):
-            continue
-        # if not filename.startswith(('x', 'ma', 'mb')): TODO: Fix issue with imports files
-        if not filename.startswith('x'):
-            continue
-        seen_files.append(filename)
-
-        noext_filepath = f'{TEMP_FOLDER}{os.path.splitext(filename)[0]}'
-        download_file(f'{BASE_URL}{link}', noext_filepath)
-        extract_zip(noext_filepath)
-        convert_dbf_to_csv(noext_filepath)
-        upload_csv_to_hdfs(hdfs_client, noext_filepath)
-    os.rmdir(TEMP_FOLDER)
-
-    save_seen_files(PERU_SEENFILES_PATH, seen_files)
+        file = collector.download_file(link)
+        collector.extract_zip(file)
+        dbf_file = os.path.splitext(file)[0] + '.DBF'
+        converted = convert_dbf_to_csv(dbf_file)
+        collector.upload_to_hdfs(converted)
 
 
 if __name__ == '__main__':
