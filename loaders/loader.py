@@ -5,7 +5,7 @@ from happybase import Connection, Table
 from hdfs import Client, InsecureClient
 from tqdm import tqdm
 
-from settings.env import HDFS_SERVER, HBASE_SERVER
+from collectors.env import HDFS_SERVER, HBASE_SERVER #TODO fix path
 
 
 class Country:

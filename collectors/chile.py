@@ -4,6 +4,7 @@ import os
 from rarfile import RarFile
 import re
 from hdfs import InsecureClient
+from env import HDFS_SERVER, HDFS_USERNAME
 
 from utils import load_seen_files, save_seen_files
 
@@ -16,9 +17,6 @@ CHILE_URL = "https://datos.gob.cl/organization/servicio_nacional_de_aduanas?page
 CHILE_SEENFILES_PATH = "chile.json"
 HEADER = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'}
-
-HDFS_SERVER = 'http://tentacool.fib.upc.edu:9870'
-HDFS_USERNAME = 'bdm'
 
 
 def get_datasets_from_all_pages():

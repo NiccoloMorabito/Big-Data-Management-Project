@@ -7,15 +7,13 @@ from hdfs import InsecureClient
 import csv
 
 from utils import load_seen_files, save_seen_files, get_links_at
+from env import HDFS_SERVER, HDFS_USERNAME
 
 PERU_HDFS_FOLDER = "/data/peru"
 PERU_URL = 'http://www.aduanet.gob.pe/aduanas/informae/presentacion_bases_web.htm'
 BASE_URL = 'http://www.aduanet.gob.pe'
 TEMP_FOLDER = 'temp/'
 PERU_SEENFILES_PATH = 'peru.json'
-
-HDFS_SERVER = 'http://tentacool.fib.upc.edu:9870'
-HDFS_USERNAME = 'bdm'
 
 
 def download_file(full_link, noext_filepath):

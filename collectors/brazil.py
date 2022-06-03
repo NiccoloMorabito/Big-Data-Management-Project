@@ -1,6 +1,7 @@
 import requests
 from os.path import join
 from hdfs import InsecureClient
+from env import HDFS_USERNAME, HDFS_SERVER
 
 from utils import load_seen_files, save_seen_files, get_links_at
 
@@ -17,9 +18,6 @@ BRAZIL_HDFS_FOLDER = "/data/brazil"
 BRAZIL_URL = "https://www.gov.br/produtividade-e-comercio-exterior/pt-br/assuntos/comercio-exterior/estatisticas/base-de-dados-bruta"
 COMMON_PART_IN_URL = "https://balanca.economia.gov.br/balanca/bd/"
 BRAZIL_SEENFILES_PATH = "brazil.json"
-
-HDFS_SERVER = 'http://tentacool.fib.upc.edu:9870'
-HDFS_USERNAME = 'bdm'
 
 
 def main():
