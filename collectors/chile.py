@@ -55,8 +55,9 @@ def extract_rars_in_hdfs(folderpath, hdfs_client):
             try:
                 rf = RarFile(filepath)
                 rf.extractall(folderpath)
-            except:
+            except Exception as e:
                 print(f"Error extracting file: {filepath}")  # TODO
+                print(e)
                 continue
 
     for file in os.listdir(folderpath):
