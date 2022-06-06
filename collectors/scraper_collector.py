@@ -1,5 +1,5 @@
 import os
-from json import JSONDecodeError, load, dump
+from json import JSONDecodeError
 from typing import List
 
 import requests
@@ -8,7 +8,7 @@ from hdfs import InsecureClient, HdfsError
 from patoolib import extract_archive
 
 from collectors.utils import basename_without_extension, join_path
-from settings.env import HDFS_SERVER, HDFS_USERNAME
+from env import HDFS_SERVER, HDFS_USERNAME
 
 
 class ScraperCollector:
