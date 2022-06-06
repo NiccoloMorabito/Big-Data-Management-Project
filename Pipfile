@@ -11,6 +11,10 @@ requests = "*"
 urllib3 = "*"
 dbfread = "*"
 happybase = "*"
+hdfs = "*"
+tqdm = "*"
+lxml = "*"
+pyspark = {extras = ["sql"], version = "*"}
 
 [dev-packages]
 
