@@ -24,7 +24,7 @@ object Main {
     println(codeToCountry)
 
     // hbase table
-    val brazilTable = sc.hbaseTable[(String, String)]("brazilTable")
+    val brazilTable = sc.hbaseTable[(String, String)]("brazil")
       .select(BRAZIL_COLUMNS)
       .inColumnFamily("values")
 
