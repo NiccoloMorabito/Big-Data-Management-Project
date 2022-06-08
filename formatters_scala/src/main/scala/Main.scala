@@ -1,7 +1,9 @@
 import it.nerdammer.spark.hbase._
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SparkSession}
 
 object Main {
+
+  val BRAZIL_COLUMNS = "CO_ANO;\"CO_MES\";\"CO_NCM\";\"CO_UNID\";\"CO_PAIS\";\"SG_UF_NCM\";\"CO_VIA\";\"CO_URF\";\"QT_ESTAT\";\"KG_LIQUIDO\";\"VL_FOB\""
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder()
@@ -11,17 +13,30 @@ object Main {
       .config("spark.hbase.port", "27000")
       .getOrCreate()
 
-    print(spark.sparkContext.parallelize(Seq(1, 2, 3, 4, 5, 6, 7, 8)).sum())
+    val sc = spark.sparkContext
 
-    // Read HBase Table
-    val hBaseRDD = spark.sparkContext
-      .hbaseTable[(String, String)]("peru")
-      .select("filename")
+    val codeToCountry = sc.textFile("src/main/resources/PAIS.csv") //TODO put in hdfs or hbase
+      .map( row => row.split(";").toList )
+      .filter( split => split.size > 4)
+      .map( split => (split(0), split(4)) ) // country code -> country name (EN)
+      .collectAsMap()
+
+    println(codeToCountry)
+
+    // hbase table
+    val brazilTable = sc.hbaseTable[(String, String)]("brazilTable")
+      .select(BRAZIL_COLUMNS)
       .inColumnFamily("values")
-    println(s"Peru table has ${hBaseRDD.count()} rows")
-    // Iterate HBaseRDD and generate RDD[Row]
-    //    val rowRDD = hBaseRDD.map(i => Row(i._1.get, i._2.get, i._3.get))
-    //
-    //    print(rowRDD.count())
+
+    val rows = brazilTable.map( r => r._2.split(";").toList)
+    rows.map( row => (
+        row(0), //year
+        row(1).replace("\"", "").toInt, //month
+        codeToCountry.get(row(4)).get, //importing/destination country
+        row(9), // amount
+        row(10))) //price (only net price)
+      .foreach(println)
+
+    spark.stop()
   }
 }
