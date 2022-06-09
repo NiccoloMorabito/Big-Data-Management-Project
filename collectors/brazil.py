@@ -14,6 +14,8 @@ def main():
         'brazil')
     links = collector.get_unseen_links()
     for link in links:
+        if collector.has_been_seen(link):
+            continue
         filename = os.path.basename(link)
         if not filename.endswith(('.csv', 'xlsx')):
             continue

@@ -42,7 +42,7 @@ class ScraperCollector:
 
     def get_unseen_links(self, filter_extension: str = '') -> List[str]:
         links = self.get_links(filter_extension)
-        unseen_links = [link for link in links if basename_without_extension(link) not in self.seen_files]
+        unseen_links = [link for link in links if not self.has_been_seen(link)]
         if self.verbose:
             print(f'\t{len(links) - len(unseen_links)} links already seen => {len(unseen_links)} new links')
         return unseen_links
@@ -99,3 +99,6 @@ class ScraperCollector:
             print(f'Adding {file_name} to list of seen files')
         self.seen_files.append(basename_without_extension(file_name))
         self.hdfs_client.write(self.seen_files_path, '\n'.join(self.seen_files), overwrite=True)
+
+    def has_been_seen(self, file_name: str) -> bool:
+        return basename_without_extension(file_name) in self.seen_files
