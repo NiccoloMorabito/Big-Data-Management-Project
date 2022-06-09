@@ -1,5 +1,4 @@
-import Citus.{CITUS_JDBC_URL, CITUS_PROPERTIES, CITUS_TABLE}
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SaveMode}
 
 import java.util.Properties
 
@@ -17,7 +16,12 @@ object Citus {
   val CITUS_JDBC_URL = s"jdbc:postgresql://$CITUS_HOST:$CITUS_PORT/$CITUS_DATABASE"
 
 
-  def uploadData(data: DataFrame): Unit = {
-    data.write.jdbc(CITUS_JDBC_URL, CITUS_TABLE, CITUS_PROPERTIES)
+  def appendData(data: DataFrame): Unit = {
+    data.write.mode(SaveMode.Append).jdbc(CITUS_JDBC_URL, CITUS_TABLE, CITUS_PROPERTIES)
   }
+
+  def overwriteData(data: DataFrame): Unit = {
+    data.write.mode(SaveMode.Overwrite).jdbc(CITUS_JDBC_URL, CITUS_TABLE, CITUS_PROPERTIES)
+  }
+
 }

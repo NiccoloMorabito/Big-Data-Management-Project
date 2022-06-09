@@ -6,6 +6,7 @@ ThisBuild / scalaVersion := "2.11.12"
 //resolvers += "Thirft" at "https://people.apache.org/~rawson/repo/"
 
 libraryDependencies ++= Seq(
+  "org.postgresql" % "postgresql" % "42.3.4",
   "org.apache.spark" % "spark-sql_2.11" % "2.0.1" excludeAll(ExclusionRule(organization="joda-time"), ExclusionRule(organization="org.slf4j"), ExclusionRule(organization="com.sun.jersey.jersey-test-framework"), ExclusionRule(organization="org.apache.hadoop")),
   "org.apache.spark" % "spark-core_2.11" % "2.0.1" excludeAll(ExclusionRule(organization="joda-time"), ExclusionRule(organization="org.slf4j"), ExclusionRule(organization="com.sun.jersey.jersey-test-framework"), ExclusionRule(organization="org.apache.hadoop")),
   "it.nerdammer.bigdata" % "spark-hbase-connector_2.10" % "1.0.3",
