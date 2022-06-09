@@ -21,42 +21,54 @@ object Main {
       .collectAsMap()
     println(codeToCountry)
 
-    val brazilTable = sc.hbaseTable[(String, String)]("brazil")
-      .select(BRAZIL_COLUMNS)
+    val brazilTable = sc.hbaseTable[(String, String, String, Int, Int)]("brazil")
+      .select("CO_ANO", "CO_MES", "CO_PAIS", "KG_LIQUIDO", "VL_FOB")
       .inColumnFamily("values")
 
-    val impRows = brazilTable.filter(r => r._1.contains("IMP"))
-      .map(r => r._2.split(";").toList)
-    //TODO for expRows do the same as impRows but inverting the first two rows (origin country and destination country)
-    val expRows = brazilTable.filter(r => r._1.contains("EXP"))
-      .map(r => r._2.split(";").toList)
+    val brazilExports = brazilTable
+      .withStartRow("EXP")
+      .withStopRow("IMP")
 
-    val impDF = impRows
-      .map( row => (
-        codeToCountry.get(row(4)).get,                                          // origin country
-        "Brazil",                                                               // destination country
-        getFirstDayDate(row(0), row(1).replace("\"", "")),  // transaction date
-        row(10).toFloat,                                                        // price (only net price)
-        "kg",                                                                   // unit
-        row(9),                                                                 // amount
-        "",                                                                     // product_category TODO
-        ""                                                                      // description TODO
+    val brazilImports = brazilTable
+      .withStartRow("IMP")
+
+
+    val impDF = brazilImports
+      .map(row => (
+        codeToCountry(row._3), // origin country
+        "Brazil", // destination country
+        getFirstDayDate(row._1, row._2), // transaction date
+        row._5.toFloat, // price (only net price)
+        "kg", // unit
+        row._4, // amount
+        "", // product_category TODO
+        "" // description TODO
       ))
       .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
 
-    saveToCitus(impDF)
+    Citus.appendData(impDF)
+
+
+    val expDF = brazilExports
+      .map(row => (
+        "Brazil", // origin country
+        codeToCountry(row._3), // destination country
+        getFirstDayDate(row._1, row._2), // transaction date
+        row._5.toFloat, // price (only net price)
+        "kg", // unit
+        row._4, // amount
+        "", // product_category TODO
+        "" // description TODO
+      ))
+      .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
+
+    Citus.appendData(expDF)
   }
 
   def getFirstDayDate(year: String, month: String): Date = {
     //TODO since we only have year and month, I am putting the first day of the month as date
     new java.sql.Date(DATE_FORMATTER.parse(year + "-" + month + "-01").getTime)
   }
-
-  def saveToCitus(df: DataFrame ): Unit = {
-    df.write
-      .jdbc(CITUS_JDBC_URL, "transactions", CITUS_PROPERTIES)
-  }
-
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder()
