@@ -5,9 +5,9 @@ CREATE TABLE transactions
     transaction_date date,
     price            float,
     unit             varchar,
-    quantity         int,
-    product_category CHAR(6) REFERENCES categories (subcategory_code),
-    description      varchar NULL
+    quantity         float,
+    product_category CHAR(6) REFERENCES categories (detail_code),
+    description      varchar
 );
 
 CREATE TABLE categories

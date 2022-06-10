@@ -1,5 +1,5 @@
 import it.nerdammer.spark.hbase._
-import org.apache.spark.sql.{SparkSession}
+import org.apache.spark.sql.SparkSession
 
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -44,7 +44,7 @@ object Main {
         row._4.toFloat, // price (only net price)
         "kg", // unit
         row._5.toInt, // amount
-        row._6, // product_category
+        row._6 + "00", // product_category
         "" // description TODO
       ))
       .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
@@ -60,7 +60,7 @@ object Main {
         row._4.toFloat, // price (only net price)
         "kg", // unit
         row._5.toInt, // amount
-        row._6, // product_category
+        row._6 + "00", // product_category
         "" // description TODO
       ))
       .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
