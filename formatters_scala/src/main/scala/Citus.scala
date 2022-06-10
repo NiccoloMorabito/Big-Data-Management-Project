@@ -1,4 +1,4 @@
-import org.apache.spark.sql.{DataFrame, SaveMode}
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 import java.util.Properties
 
@@ -8,7 +8,8 @@ object Citus {
   val CITUS_USER = "postgres"
   val CITUS_PASSWORD = "postgres"
   val CITUS_DATABASE = "bdm"
-  val CITUS_TABLE = "transactions"
+  val CITUS_TRANSACTIONS_TABLE = "transactions"
+  val CITUS_CATEGORIES_TABLE = "categories"
   val CITUS_PROPERTIES = new Properties()
   CITUS_PROPERTIES.setProperty("user", CITUS_USER)
   CITUS_PROPERTIES.setProperty("password", CITUS_PASSWORD)
@@ -17,11 +18,15 @@ object Citus {
 
 
   def appendData(data: DataFrame): Unit = {
-    data.write.mode(SaveMode.Append).jdbc(CITUS_JDBC_URL, CITUS_TABLE, CITUS_PROPERTIES)
+    data.write.mode(SaveMode.Append).jdbc(CITUS_JDBC_URL, CITUS_TRANSACTIONS_TABLE, CITUS_PROPERTIES)
   }
 
   def overwriteData(data: DataFrame): Unit = {
-    data.write.mode(SaveMode.Overwrite).jdbc(CITUS_JDBC_URL, CITUS_TABLE, CITUS_PROPERTIES)
+    data.write.mode(SaveMode.Overwrite).jdbc(CITUS_JDBC_URL, CITUS_TRANSACTIONS_TABLE, CITUS_PROPERTIES)
+  }
+
+  def getCategories(spark: SparkSession): DataFrame = {
+    spark.read.jdbc(CITUS_JDBC_URL, CITUS_CATEGORIES_TABLE, CITUS_PROPERTIES)
   }
 
 }
