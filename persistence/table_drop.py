@@ -1,15 +1,17 @@
 import happybase
 
+from collectors.env import HBASE_SERVER
+
 
 def drop_table(table_name):
-    connection = happybase.Connection('victreebel.fib.upc.edu')
+    connection = happybase.Connection(HBASE_SERVER)
     print(f'Dropping table {table_name} ... ', end='')
     connection.delete_table(table_name, True)
     print('Dropped')
 
 
 def drop_all_tables():
-    connection = happybase.Connection('victreebel.fib.upc.edu')
+    connection = happybase.Connection(HBASE_SERVER)
     tables = connection.tables()
     print(f'Dropping {len(tables)} tables: {", ".join(tables)}')
     for table in tables:
