@@ -1,13 +1,13 @@
 CREATE TABLE transactions
 (
-    origin           varchar(4),
-    destination      varchar(4),
+    origin           varchar(60),
+    destination      varchar(60),
     transaction_date date,
     price            float,
     unit             varchar,
     quantity         int,
-    product_category CHAR(6) REFERENCES categories (detail_code),
-    description      varchar
+    product_category CHAR(6) REFERENCES categories (subcategory_code),
+    description      varchar NULL
 );
 
 CREATE TABLE categories

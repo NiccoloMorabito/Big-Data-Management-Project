@@ -1,28 +1,32 @@
-import Citus.{CITUS_JDBC_URL, CITUS_PROPERTIES}
 import it.nerdammer.spark.hbase._
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{SparkSession}
 
 import java.sql.Date
 import java.text.SimpleDateFormat
 
 object Main {
 
-  val BRAZIL_COLUMNS = "CO_ANO;\"CO_MES\";\"CO_NCM\";\"CO_UNID\";\"CO_PAIS\";\"SG_UF_NCM\";\"CO_VIA\";\"CO_URF\";\"QT_ESTAT\";\"KG_LIQUIDO\";\"VL_FOB\""
-  val DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd");
-
   def brazil(spark: SparkSession): Unit = {
     import spark.implicits._
     val sc = spark.sparkContext
 
-    val codeToCountry = sc.textFile("src/main/resources/PAIS.csv") //TODO put in hdfs or hbase
+    /*
+    val codeToCountry = sc.textFile("src/main/resources/PAIS.csv") //TODO put in hdfs or hbase ?
       .map(row => row.split(";").toList)
       .filter(split => split.size > 4)
-      .map(split => (split(0), split(4))) // country code -> country name (EN)
+      .map(split => (split(0).toInt, split(4))) // country code -> country name (EN)
       .collectAsMap()
-    println(codeToCountry)
 
-    val brazilTable = sc.hbaseTable[(String, String, String, Int, Int)]("brazil")
-      .select("CO_ANO", "CO_MES", "CO_PAIS", "KG_LIQUIDO", "VL_FOB")
+    val shToCategory = sc.textFile("src/main/resources/NCM_SH.csv") //TODO put in hdfs or hbase ?
+      .map(row => row.split(";").toList)
+      //.filter(split => split.size > 4)
+      .map(split => (split(4).toInt, split(7))) // sh4 code -> NO_SH4 (EN)
+      .collectAsMap()
+    //println(shToCategory)
+     */
+
+    val brazilTable = sc.hbaseTable[(String, String, String, String, String, String)]("brazil")
+      .select("CO_PAIS", "CO_ANO", "CO_MES", "VL_FOB", "KG_LIQUIDO", "SH4")
       .inColumnFamily("values")
 
     val brazilExports = brazilTable
@@ -32,42 +36,42 @@ object Main {
     val brazilImports = brazilTable
       .withStartRow("IMP")
 
+    val expDF = brazilExports
+      .map(row => (
+        "105", // origin country (Brazil)
+        row._1, // destination country
+        getFirstDayDate(row._2, row._3), // transaction date
+        row._4.toFloat, // price (only net price)
+        "kg", // unit
+        row._5.toInt, // amount
+        row._6, // product_category
+        "" // description TODO
+      ))
+      .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
+
+    Citus.appendData(expDF)
+
 
     val impDF = brazilImports
       .map(row => (
-        codeToCountry(row._3), // origin country
-        "Brazil", // destination country
-        getFirstDayDate(row._1, row._2), // transaction date
-        row._5.toFloat, // price (only net price)
+        row._1, // origin country
+        "105", // destination country (Brazil)
+        getFirstDayDate(row._2, row._3), // transaction date
+        row._4.toFloat, // price (only net price)
         "kg", // unit
-        row._4, // amount
-        "", // product_category TODO
+        row._5.toInt, // amount
+        row._6, // product_category
         "" // description TODO
       ))
       .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
 
     Citus.appendData(impDF)
 
-
-    val expDF = brazilExports
-      .map(row => (
-        "Brazil", // origin country
-        codeToCountry(row._3), // destination country
-        getFirstDayDate(row._1, row._2), // transaction date
-        row._5.toFloat, // price (only net price)
-        "kg", // unit
-        row._4, // amount
-        "", // product_category TODO
-        "" // description TODO
-      ))
-      .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
-
-    Citus.appendData(expDF)
   }
 
   def getFirstDayDate(year: String, month: String): Date = {
     //TODO since we only have year and month, I am putting the first day of the month as date
-    new java.sql.Date(DATE_FORMATTER.parse(year + "-" + month + "-01").getTime)
+    new java.sql.Date(new SimpleDateFormat("yyyy-MM-dd").parse(year + "-" + month + "-01").getTime)
   }
 
   def main(args: Array[String]): Unit = {
