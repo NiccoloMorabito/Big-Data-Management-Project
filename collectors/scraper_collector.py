@@ -77,7 +77,7 @@ class ScraperCollector:
             print(f'Uploading {file_path} to HDFS as {hdfs_file_name}', end='')
         self.hdfs_client.upload(hdfs_file_name, file_path)
         if self.verbose:
-            print(f' => uploaded and added to seen files')
+            print(f' => uploaded')
         self.add_seen_file(basename_without_extension(file_name))
         if remove:
             if self.verbose:
@@ -96,9 +96,11 @@ class ScraperCollector:
 
     def add_seen_file(self, file_name: str):
         if self.verbose:
-            print(f'Adding {file_name} to list of seen files')
+            print(f'Adding {file_name} to list of seen files', end='')
         self.seen_files.append(basename_without_extension(file_name))
         self.hdfs_client.write(self.seen_files_path, '\n'.join(self.seen_files), overwrite=True)
+        if self.verbose:
+            print(f' => Done')
 
     def has_been_seen(self, file_name: str) -> bool:
         return basename_without_extension(file_name) in self.seen_files
