@@ -26,6 +26,10 @@ object Citus {
     data.write.mode(SaveMode.Overwrite).jdbc(CITUS_JDBC_URL, CITUS_TRANSACTIONS_TABLE, CITUS_PROPERTIES)
   }
 
+  def getTransactions(spark: SparkSession): DataFrame = {
+    spark.read.jdbc(CITUS_JDBC_URL, CITUS_TRANSACTIONS_TABLE, CITUS_PROPERTIES)
+  }
+
   def getCategories(spark: SparkSession): DataFrame = {
     spark.read.jdbc(CITUS_JDBC_URL, CITUS_CATEGORIES_TABLE, CITUS_PROPERTIES)
   }

@@ -17,11 +17,15 @@ object Peru {
       .map(row => (row.getString(0), row.getString(1)))
       .collectAsMap()
 
+    val existing_rows = Citus.getTransactions(spark)
+      .select("id").map(row => row.getString(0)).collect().toSet
+
     val exports = spark.sparkContext.hbaseTable[(String, String, String, String, String, String, String)]("peru")
       .select("FECH_RECEP", "CPAIDES", "VPESNET", "TUNIFIS", "QUNIFIS", "DCOM")
       .inColumnFamily("values")
       .withStartRow("x")
       .withStopRow("y")
+      .filter(row => !existing_rows.contains(row._1))
       .filter(row => countries.contains(row._3))
       .map(row => (
         row._1, // row id
@@ -41,8 +45,9 @@ object Peru {
     val imports = spark.sparkContext.hbaseTable[(String, String, String, String, String, String, String)]("peru")
       .select("FECH_RECEP", "PAIS_ORIGE", "PESO_NETO", "UNID_FIDES", "UNID_FIQTY", "DESC_COMER")
       .inColumnFamily("values")
-      .withStartRow("mb")
-      .withStopRow("mc")
+      .withStartRow("ma")
+      .withStopRow("mal")
+      .filter(row => !existing_rows.contains(row._1))
       .filter(row => countries.contains(row._3))
       .map(row => (
         row._1, // row id

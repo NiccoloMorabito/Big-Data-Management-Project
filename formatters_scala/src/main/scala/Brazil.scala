@@ -10,33 +10,23 @@ object Brazil {
     import spark.implicits._
     val sc = spark.sparkContext
 
-    val codeToCountry = sc.textFile("src/main/resources/PAIS.csv") //TODO put in hdfs or hbase ?
-      .map(row => row.split(";").toList)
-      .filter(split => split.size > 4 && !split.head.equals("\"CO_PAIS\""))
-      .map(split => (split.head.replace("\"", ""), split(2))) // country code -> country name (EN)
+    val codeToCountry = spark.read
+      .option("header", "true")
+      .option("delimiter", ";")
+      .option("encoding", "latin1")
+      .csv("src/main/resources/PAIS.csv")
+      .map(row => (row.getString(0), row.getString(2)))
+      .rdd
       .collectAsMap()
 
-    /*
-    val shToCategory = sc.textFile("src/main/resources/NCM_SH.csv") //TODO put in hdfs or hbase ?
-      .map(row => row.split(";").toList)
-      //.filter(split => split.size > 4)
-      .map(split => (split(4).toInt, split(7))) // sh4 code -> NO_SH4 (EN)
-      .collectAsMap()
-    //println(shToCategory)
-     */
 
     val brazilTable = sc.hbaseTable[(String, String, String, String, String, String, String)]("brazil")
       .select("CO_PAIS", "CO_ANO", "CO_MES", "VL_FOB", "KG_LIQUIDO", "SH4")
       .inColumnFamily("values")
 
-    val brazilExports = brazilTable
+    val expDF = brazilTable
       .withStartRow("EXP")
       .withStopRow("IMP")
-
-    val brazilImports = brazilTable
-      .withStartRow("IMP")
-
-    val expDF = brazilExports
       .map(row => (
         row._1,
         "BRA", // origin country
@@ -52,8 +42,8 @@ object Brazil {
 
     Citus.appendData(expDF)
 
-
-    val impDF = brazilImports
+    val impDF = brazilTable
+      .withStartRow("IMP")
       .map(row => (
         row._1, // id
         codeToCountry(row._2), // origin country
