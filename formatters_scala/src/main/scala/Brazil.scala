@@ -44,7 +44,7 @@ object Brazil {
         row._4.toFloat, // price (only net price)
         "kg", // unit
         row._5.toFloat, // amount
-        row._6 + "00", // product_category //TODO not correct
+        row._6, // product_category
         "" // description
       ))
       .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
@@ -60,7 +60,7 @@ object Brazil {
         row._4.toFloat, // price (only net price)
         "kg", // unit
         row._5.toFloat, // amount
-        row._6 + "00", // product_category //TODO not correct
+        row._6, // product_category
         "" // description
       ))
       .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
