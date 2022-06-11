@@ -4,19 +4,19 @@ import org.apache.spark.sql.SparkSession
 import java.sql.Date
 import java.text.SimpleDateFormat
 
-object Main {
+object Brazil {
 
   def brazil(spark: SparkSession): Unit = {
     import spark.implicits._
     val sc = spark.sparkContext
 
-    /*
     val codeToCountry = sc.textFile("src/main/resources/PAIS.csv") //TODO put in hdfs or hbase ?
       .map(row => row.split(";").toList)
-      .filter(split => split.size > 4)
-      .map(split => (split(0).toInt, split(4))) // country code -> country name (EN)
+      .filter(split => split.size > 4 && !split(0).equals("\"CO_PAIS\""))
+      .map(split => (split(0).replace("\"", "").toInt, split(4))) // country code -> country name (EN)
       .collectAsMap()
 
+    /*
     val shToCategory = sc.textFile("src/main/resources/NCM_SH.csv") //TODO put in hdfs or hbase ?
       .map(row => row.split(";").toList)
       //.filter(split => split.size > 4)
@@ -38,14 +38,14 @@ object Main {
 
     val expDF = brazilExports
       .map(row => (
-        "105", // origin country (Brazil)
-        row._1, // destination country
+        "Brazil", // origin country
+        codeToCountry(row._1.toInt), // destination country
         getFirstDayDate(row._2, row._3), // transaction date
         row._4.toFloat, // price (only net price)
         "kg", // unit
-        row._5.toInt, // amount
-        row._6 + "00", // product_category
-        "" // description TODO
+        row._5.toFloat, // amount
+        row._6 + "00", // product_category //TODO not correct
+        "" // description
       ))
       .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
 
@@ -54,14 +54,14 @@ object Main {
 
     val impDF = brazilImports
       .map(row => (
-        row._1, // origin country
-        "105", // destination country (Brazil)
+        codeToCountry(row._1.toInt), // origin country
+        "Brazil", // destination country
         getFirstDayDate(row._2, row._3), // transaction date
         row._4.toFloat, // price (only net price)
         "kg", // unit
-        row._5.toInt, // amount
-        row._6 + "00", // product_category
-        "" // description TODO
+        row._5.toFloat, // amount
+        row._6 + "00", // product_category //TODO not correct
+        "" // description
       ))
       .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
 
@@ -86,4 +86,5 @@ object Main {
 
     spark.stop()
   }
+
 }
