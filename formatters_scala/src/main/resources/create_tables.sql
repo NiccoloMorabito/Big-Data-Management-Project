@@ -46,6 +46,15 @@ CREATE TABLE categories
     supercategory_eng  VARCHAR(500)
 );
 
+CREATE TABLE countries (
+    code CHAR(3) PRIMARY KEY,
+    iso3_numeric_code CHAR(3),
+    iso3_code CHAR(3),
+    name_port VARCHAR(100),
+    name_eng VARCHAR(100),
+    name_esp VARCHAR(100)
+);
+
 -- After loading categories
 
 -- Add subcategories
