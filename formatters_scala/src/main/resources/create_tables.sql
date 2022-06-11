@@ -1,13 +1,14 @@
 CREATE TABLE transactions
 (
-    origin           varchar(60),
-    destination      varchar(60),
-    transaction_date date,
-    price            float,
-    unit             varchar,
-    quantity         float,
+    id               VARCHAR(50) PRIMARY KEY,
+    origin           CHAR(3) REFERENCES countries (iso3),
+    destination      CHAR(3) REFERENCES countries (iso3),
+    transaction_date DATE,
+    price            FLOAT,
+    unit             VARCHAR,
+    quantity         FLOAT,
     product_category CHAR(4) REFERENCES categories (subcategory_code),
-    description      varchar
+    description      VARCHAR
 );
 
 CREATE TABLE detailed_categories
@@ -46,13 +47,12 @@ CREATE TABLE categories
     supercategory_eng  VARCHAR(500)
 );
 
-CREATE TABLE countries (
-    code CHAR(3) PRIMARY KEY,
-    iso3_numeric_code CHAR(3),
-    iso3_code CHAR(3),
-    name_port VARCHAR(100),
-    name_eng VARCHAR(100),
-    name_esp VARCHAR(100)
+CREATE TABLE countries
+(
+    name VARCHAR(100),
+    iso2 CHAR(2) UNIQUE,
+    iso3 CHAR(3) PRIMARY KEY,
+    ison CHAR(3) UNIQUE
 );
 
 -- After loading categories

@@ -10,6 +10,7 @@ object Citus {
   val CITUS_DATABASE = "bdm"
   val CITUS_TRANSACTIONS_TABLE = "transactions"
   val CITUS_CATEGORIES_TABLE = "categories"
+  val CITUS_COUNTRIES_TABLE = "countries"
   val CITUS_PROPERTIES = new Properties()
   CITUS_PROPERTIES.setProperty("user", CITUS_USER)
   CITUS_PROPERTIES.setProperty("password", CITUS_PASSWORD)
@@ -27,6 +28,10 @@ object Citus {
 
   def getCategories(spark: SparkSession): DataFrame = {
     spark.read.jdbc(CITUS_JDBC_URL, CITUS_CATEGORIES_TABLE, CITUS_PROPERTIES)
+  }
+
+  def getCountries(spark: SparkSession): DataFrame = {
+    spark.read.jdbc(CITUS_JDBC_URL, CITUS_COUNTRIES_TABLE, CITUS_PROPERTIES)
   }
 
 }
