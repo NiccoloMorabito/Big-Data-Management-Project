@@ -1,38 +1,63 @@
 import it.nerdammer.spark.hbase._
 import org.apache.spark.sql.SparkSession
 
+import java.text.SimpleDateFormat
+import scala.util.Random
+
 object Peru {
   def format(spark: SparkSession): Unit = {
     import spark.implicits._
-    val categories = Citus.getCategories(spark).select("detail_code").collect()
+    val categories = Citus.getCategories(spark)
+      .select("subcategory_code")
+      .map(row => row.getString(0))
+      .collect()
+    val countries = Citus.getCountries(spark)
+      .select("iso2", "iso3")
+      .rdd
+      .map(row => (row.getString(0), row.getString(1)))
+      .collectAsMap()
 
-    val data = spark.sparkContext.hbaseTable[(String, String, Float, String, Float, String)]("peru")
-      .select("FECH_RECEP", "PAIS_ORIGE", "PESO_NETO", "UNID_FIDES", "UNID_FIQTY", "DESC_COMER")
+    val exports = spark.sparkContext.hbaseTable[(String, String, String, String, String, String, String)]("peru")
+      .select("FECH_RECEP", "CPAIDES", "VPESNET", "TUNIFIS", "QUNIFIS", "DCOM")
       .inColumnFamily("values")
-
-    val exports = data
       .withStartRow("x")
       .withStopRow("y")
+      .filter(row => countries.contains(row._3))
+      .map(row => (
+        row._1, // row id
+        "PER", // origin country
+        countries(row._3), // destination country
+        new java.sql.Date(new SimpleDateFormat("yyyyMMdd").parse(row._2).getTime), // transaction date
+        row._4.toFloat, // price (only net price)
+        row._5, // unit
+        row._6.toFloat, // amount
+        categories(Random.nextInt(categories.length)), // product_category
+        row._7 // description
+      ))
+      .toDF("id", "origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
 
-    val imports = data
+    Citus.appendData(exports)
+
+    val imports = spark.sparkContext.hbaseTable[(String, String, String, String, String, String, String)]("peru")
+      .select("FECH_RECEP", "PAIS_ORIGE", "PESO_NETO", "UNID_FIDES", "UNID_FIQTY", "DESC_COMER")
+      .inColumnFamily("values")
       .withStartRow("mb")
       .withStopRow("mc")
-
-
-    val impDF = imports
+      .filter(row => countries.contains(row._3))
       .map(row => (
-        row._2, // origin country
-        "Peru", // destination country
-        row._1, // transaction date
-        row._3, // price (only net price)
-        row._4, // unit
-        row._5, // amount
-        "", // product_category TODO
-        row._6 // description
+        row._1, // row id
+        countries(row._3), // origin country
+        "PER", // destination country
+        new java.sql.Date(new SimpleDateFormat("yyyyMMdd").parse(row._2).getTime), // transaction date
+        row._4.toFloat, // price (only net price)
+        row._5, // unit
+        row._6.toFloat, // amount
+        categories(Random.nextInt(categories.length)), // product_category
+        row._7 // description
       ))
-      .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
+      .toDF("id", "origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
 
-    Citus.appendData(impDF)
+    Citus.appendData(imports)
   }
 
   def main(args: Array[String]): Unit = {
