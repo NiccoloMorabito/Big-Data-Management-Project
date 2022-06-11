@@ -12,8 +12,8 @@ object Brazil {
 
     val codeToCountry = sc.textFile("src/main/resources/PAIS.csv") //TODO put in hdfs or hbase ?
       .map(row => row.split(";").toList)
-      .filter(split => split.size > 4 && !split(0).equals("\"CO_PAIS\""))
-      .map(split => (split(0).replace("\"", "").toInt, split(4))) // country code -> country name (EN)
+      .filter(split => split.size > 4 && !split.head.equals("\"CO_PAIS\""))
+      .map(split => (split.head.replace("\"", ""), split(2))) // country code -> country name (EN)
       .collectAsMap()
 
     /*
@@ -25,7 +25,7 @@ object Brazil {
     //println(shToCategory)
      */
 
-    val brazilTable = sc.hbaseTable[(String, String, String, String, String, String)]("brazil")
+    val brazilTable = sc.hbaseTable[(String, String, String, String, String, String, String)]("brazil")
       .select("CO_PAIS", "CO_ANO", "CO_MES", "VL_FOB", "KG_LIQUIDO", "SH4")
       .inColumnFamily("values")
 
@@ -38,32 +38,34 @@ object Brazil {
 
     val expDF = brazilExports
       .map(row => (
-        "Brazil", // origin country
-        codeToCountry(row._1.toInt), // destination country
-        getFirstDayDate(row._2, row._3), // transaction date
-        row._4.toFloat, // price (only net price)
+        row._1,
+        "BRA", // origin country
+        codeToCountry(row._2), // destination country
+        getFirstDayDate(row._3, row._4), // transaction date
+        row._5.toFloat, // price (only net price)
         "kg", // unit
-        row._5.toFloat, // amount
-        row._6, // product_category
+        row._6.toFloat, // amount
+        row._7, // product_category
         "" // description
       ))
-      .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
+      .toDF("id", "origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
 
     Citus.appendData(expDF)
 
 
     val impDF = brazilImports
       .map(row => (
-        codeToCountry(row._1.toInt), // origin country
-        "Brazil", // destination country
-        getFirstDayDate(row._2, row._3), // transaction date
-        row._4.toFloat, // price (only net price)
+        row._1, // id
+        codeToCountry(row._2), // origin country
+        "BRA", // destination country
+        getFirstDayDate(row._3, row._4), // transaction date
+        row._5.toFloat, // price (only net price)
         "kg", // unit
-        row._5.toFloat, // amount
-        row._6, // product_category
+        row._6.toFloat, // amount
+        row._7, // product_category
         "" // description
       ))
-      .toDF("origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
+      .toDF("id", "origin", "destination", "transaction_date", "price", "unit", "quantity", "product_category", "description")
 
     Citus.appendData(impDF)
 
