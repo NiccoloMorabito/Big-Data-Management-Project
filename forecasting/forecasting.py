@@ -43,7 +43,7 @@ def insample_forecast(cat_pd):
     StructField('MSE', DoubleType()),
     StructField('RMSE', DoubleType())
 ]), PandasUDFType.GROUPED_MAP)
-def performance(cat_pd):
+def forecast_performance(cat_pd):
     category = cat_pd['cat'].iloc[0]
     model = Prophet()
     train = cat_pd.iloc[:cat_pd.shape[0] - 12]
@@ -102,7 +102,7 @@ def main():
     cat_part = (cat_df.repartition(spark.sparkContext.defaultParallelism, ['ds'])).cache()
     cat_part.explain()
 
-    performance = (cat_part.groupby('cat').apply(performance).withColumn('training_date', current_date()))
+    performance = (cat_part.groupby('cat').apply(forecast_performance).withColumn('training_date', current_date()))
     testing = (cat_part.groupby('cat').apply(insample_forecast).withColumn('training_date', current_date()))
     results = (cat_part.groupby('cat').apply(forecast_sales).withColumn('training_date', current_date()))
     results.cache()
