@@ -118,7 +118,7 @@ def main():
 
     spark.sql("SELECT * FROM testPerformance ORDER BY MSE ASC").show(4)
 
-    category = '0706'  ## Edit to the desired category
+    category = '0706'  # Edit to the desired category
 
     spark.sql(f"SELECT * FROM test WHERE cat = '{category}'").show(4)
 
