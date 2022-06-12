@@ -6,9 +6,7 @@ import pandas as pd
 from fbprophet import Prophet
 from fbprophet.serialize import model_to_json
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
-from pyspark.sql.functions import current_date
-from pyspark.sql.functions import pandas_udf, PandasUDFType
+from pyspark.sql.functions import col, current_date, pandas_udf, PandasUDFType
 from pyspark.sql.types import *
 from sklearn.metrics import mean_squared_error
 
