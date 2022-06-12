@@ -56,11 +56,12 @@ def load_file_to_hbase(file: str, hdfs_client: Client, hbase_client: Table, coun
 def load_country(hdfs_client: Client, hbase_client: Connection, country: Country):
     files = hdfs_client.list(country.base_path)
     print(f'Loading {country.name} files:\n\t' + '\n\t'.join(files))
-    with Pool() as pool:
+    with Pool(6) as pool:
         iterable = zip(files, (deepcopy(country) for _ in files))
         pool.starmap(load_file_to_hbase_new_clients, iterable, chunksize=2)
-        # for file in files:
-        #     load_file_to_hbase(file, hdfs_client, hbase_client.table(country.table_name), country)
+    # for file in files:
+    #     load_file_to_hbase(file, hdfs_client, hbase_client.table(country.table_name), country)
+    #     return
 
 
 def peru_key_gen(filename: str, row: Dict, row_number: int) -> str:
@@ -82,7 +83,7 @@ def main():
     countries = [
         Country('Peru', peru_key_gen),
         # Country('Chile', chile_key_gen),
-        # Country('Brazil', brazil_key_gen, csv_delimiter=';', batch_size=10000),
+        Country('Brazil', brazil_key_gen, csv_delimiter=';', batch_size=10000),
     ]
     for country in countries:
         load_country(hdfs_client, hbase_client, country)
