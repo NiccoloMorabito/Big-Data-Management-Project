@@ -14,7 +14,10 @@ happybase = "*"
 hdfs = "*"
 tqdm = "*"
 lxml = "*"
-pyspark = {extras = ["sql"], version = "*"}
+pyspark = "*"
+matplotlib = "*"
+scikit-learn = "*"
+pandas = "*"
 
 [dev-packages]
 
