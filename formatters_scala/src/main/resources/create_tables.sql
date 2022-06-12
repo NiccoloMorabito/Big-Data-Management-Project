@@ -11,6 +11,40 @@ CREATE TABLE transactions
     description      VARCHAR
 );
 
+CREATE VIEW agricultural_exports_agg AS
+(
+SELECT to_char(transaction_date, 'YYYY-MM') as month,
+       subcategory_code                     as category,
+       origin,
+       sum(price)                           as total_price
+from transactions
+         JOIN categories c ON transactions.product_category = c.subcategory_code
+WHERE supercategory_code = 'II'
+GROUP BY subcategory_code,
+         month,
+         origin
+    );
+
+
+CREATE MATERIALIZED VIEW agricultural_exports_agg_full AS
+(
+WITH cats AS (SELECT DISTINCT category
+              FROM agricultural_exports_agg),
+     month_cat_count AS (SELECT month, category, iso3
+                         FROM months,
+                              cats,
+                              countries)
+SELECT month_cat_count.month      AS month,
+       month_cat_count.category   AS category,
+       COALESCE(total_price, 0.0) AS total_price,
+       month_cat_count.iso3       AS origin
+FROM month_cat_count
+         LEFT OUTER JOIN agricultural_exports_agg aea
+                         ON month_cat_count.month = aea.month
+                             AND month_cat_count.category = aea.category
+                             AND month_cat_count.iso3 = aea.origin
+    );
+
 CREATE TABLE detailed_categories
 (
     detail_code        CHAR(6) PRIMARY KEY,
